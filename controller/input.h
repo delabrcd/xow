@@ -31,23 +31,17 @@
  * User mode input device for gamepads
  * Passes force feedback events to callback
  */
-class InputDevice
-{
+class InputDevice {
 public:
-    using FeedbackReceived = std::function<void(
-        uint16_t gain,
-        ff_effect effect,
-        uint8_t replayCount
-    )>;
+    using FeedbackReceived =
+        std::function<void(uint16_t gain, ff_effect effect, uint8_t replayCount)>;
 
-    struct AxisConfig
-    {
+    struct AxisConfig {
         int32_t minimum, maximum;
         int32_t fuzz, flat;
     };
 
-    struct DeviceConfig
-    {
+    struct DeviceConfig {
         uint16_t vendorId, productId;
         uint16_t version;
     };
@@ -60,44 +54,36 @@ public:
     void addFeedback(uint16_t code);
     void create(std::string name, DeviceConfig config);
 
-    inline void setKey(uint16_t key, bool pressed)
-    {
+    inline void setKey(uint16_t key, bool pressed) {
         emitCode(EV_KEY, key, pressed);
     }
 
-    inline void setAxis(uint16_t abs, int32_t value)
-    {
+    inline void setAxis(uint16_t abs, int32_t value) {
         emitCode(EV_ABS, abs, value);
     }
 
-    inline void report()
-    {
+    inline void report() {
         emitCode(EV_SYN, SYN_REPORT, 0);
     }
 
 private:
     void readEvents();
-    void emitCode(
-        uint16_t type,
-        uint16_t code,
-        int32_t value
-    );
+    void emitCode(uint16_t type, uint16_t code, int32_t value);
 
     void handleFeedbackUpload(uint32_t id);
     void handleFeedbackErase(uint32_t id);
     void handleEvent(input_event event);
 
-    int file;
+    int                 file;
     InterruptibleReader eventReader;
-    std::thread eventThread;
+    std::thread         eventThread;
 
-    ff_effect effect = {};
-    uint16_t effectGain = 0xffff;
+    ff_effect        effect     = {};
+    uint16_t         effectGain = 0xffff;
     FeedbackReceived feedbackReceived;
 };
 
-class InputException : public std::runtime_error
-{
+class InputException : public std::runtime_error {
 public:
     InputException(std::string message);
 };

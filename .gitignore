@@ -5,3 +5,8 @@ xow
 *.d
 *.o
 .vscode/*
+CMakeFiles/**
+*/CMakeFiles/**
+*.cmake
+*.marks
+Makefile

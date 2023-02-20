@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "../utils/bytes.h"
+#include "bytes.h"
 
 #include <cstdint>
 #include <functional>
@@ -28,20 +28,18 @@
 
 #include <libusb-1.0/libusb.h>
 
-#define USB_MAX_BULK_TRANSFER_SIZE 512
+#define USB_MAX_BULK_TRANSFER_SIZE 64
 
 /*
  * Base class for interfacing with USB devices
  * Provides control/bulk transfer capabilities
  */
-class UsbDevice
-{
+class UsbDevice {
 public:
     using Terminate = std::function<void()>;
 
-    struct ControlPacket
-    {
-        uint8_t request;
+    struct ControlPacket {
+        uint8_t  request;
         uint16_t value;
         uint16_t index;
         uint8_t *data;
@@ -52,48 +50,46 @@ public:
     virtual ~UsbDevice();
 
     void controlTransfer(ControlPacket packet, bool write);
-    int bulkRead(
-        uint8_t endpoint,
-        FixedBytes<USB_MAX_BULK_TRANSFER_SIZE> &buffer
-    );
+    int  bulkRead(uint8_t endpoint, FixedBytes<USB_MAX_BULK_TRANSFER_SIZE> &buffer);
     bool bulkWrite(uint8_t endpoint, Bytes &data);
 
+    inline uint8_t getEndpointInAddress() const {
+        return m_EPIN.bEndpointAddress;
+    }
+
+    inline uint8_t getEndpointOutAddress() const {
+        return m_EPOUT.bEndpointAddress;
+    }
+
 private:
-    libusb_device_handle *handle;
-    Terminate terminate;
+    libusb_endpoint_descriptor m_EPIN;
+    libusb_endpoint_descriptor m_EPOUT;
+    libusb_device_handle *     handle;
+    Terminate                  terminate;
 };
 
 /*
  * Provides access to USB devices
  * Handles device enumeration and hot plugging
  */
-class UsbDeviceManager
-{
+class UsbDeviceManager {
 public:
-    struct HardwareId
-    {
+    struct HardwareId {
         uint16_t vendorId, productId;
     };
 
     UsbDeviceManager();
     ~UsbDeviceManager();
 
-    std::unique_ptr<UsbDevice> getDevice(
-        std::initializer_list<HardwareId> ids,
-        UsbDevice::Terminate terminate
-    );
+    std::unique_ptr<UsbDevice> getDevice(std::initializer_list<HardwareId> ids,
+                                         UsbDevice::Terminate              terminate);
 
 private:
-    static int hotplugCallback(
-        libusb_context *context,
-        libusb_device *device,
-        libusb_hotplug_event event,
-        void *userData
-    );
+    static int hotplugCallback(libusb_context *context, libusb_device *device,
+                               libusb_hotplug_event event, void *userData);
 };
 
-class UsbException : public std::runtime_error
-{
+class UsbException : public std::runtime_error {
 public:
     UsbException(std::string message, int error);
 };

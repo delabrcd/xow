@@ -27,43 +27,31 @@
 #include <mutex>
 #include <condition_variable>
 
-/*
- * Forwards gamepad events to virtual input device
- * Passes force feedback effects to gamepad
- */
-class Controller : public GipDevice
-{
+constexpr uint8_t DEVICE_ID_CONTROLLER = 0;
+
+class Controller : public GipDevice {
 public:
     Controller(SendPacket sendPacket);
     ~Controller();
+
+    SerialData getSerialData() const {
+        return m_SerialData;
+    }
 
 private:
     /* GIP events */
     void deviceAnnounced(uint8_t id, const AnnounceData *announce) override;
     void statusReceived(uint8_t id, const StatusData *status) override;
-    void guideButtonPressed(const GuideButtonData *button) override;
+    void guideButtonPressed(const GuideButtonData *button) override {}
     void serialNumberReceived(const SerialData *serial) override;
     void inputReceived(const InputData *input) override;
 
     /* Device initialization */
     void initInput(const AnnounceData *announce);
 
-    /* Rumble buffer consumer */
-    void processRumble();
-
-    /* OS interface */
-    void inputFeedbackReceived(
-        uint16_t gain,
-        ff_effect effect,
-        uint8_t replayCount
-    );
-
-    InputDevice inputDevice;
-    std::atomic<bool> stopRumbleThread;
-    std::thread rumbleThread;
-    std::mutex rumbleMutex;
-    std::condition_variable rumbleCondition;
-    Buffer<RumbleData> rumbleBuffer;
-
     uint8_t batteryLevel = 0xff;
+
+    SerialData m_SerialData;
+
+    InputData m_InputData;
 };

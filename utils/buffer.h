@@ -25,14 +25,12 @@
  * Single consumer/producer lock-free triple buffer implementation
  * Concurrent access from multiple consumers or producers requires locking
  */
-template<typename T>
-class Buffer
-{
+template <typename T>
+class Buffer {
 public:
     Buffer() : back(new T), middle(new T), front(new T), queued(false) {}
 
-    void put(const T &data)
-    {
+    void put(const T &data) {
         *back = data;
 
         // Swap middle buffer with back buffer
@@ -42,10 +40,8 @@ public:
         queued = true;
     }
 
-    bool get(T &data)
-    {
-        if (!std::atomic_exchange(&queued, false))
-        {
+    bool get(T &data) {
+        if (!std::atomic_exchange(&queued, false)) {
             return false;
         }
 
@@ -60,5 +56,5 @@ public:
 
 private:
     std::shared_ptr<T> back, middle, front;
-    std::atomic<bool> queued;
+    std::atomic<bool>  queued;
 };

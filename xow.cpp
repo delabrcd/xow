@@ -16,17 +16,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+#include "controller/UsbController.h"
+#include "controller/usb.h"
 #include "utils/log.h"
 #include "utils/reader.h"
-#include "dongle/usb.h"
-#include "dongle/dongle.h"
 
-#include <cstring>
 #include <csignal>
+#include <cstring>
 #include <sys/signalfd.h>
 
-int main()
-{
+#define MICROSOFT_VID 0x045e
+
+int main() {
     Log::init();
     Log::info("xow %s ©Severin v. W.", VERSION);
 
@@ -38,8 +39,7 @@ int main()
     sigaddset(&signalMask, SIGUSR1);
 
     // Block signals for all USB threads
-    if (pthread_sigmask(SIG_BLOCK, &signalMask, nullptr) < 0)
-    {
+    if (pthread_sigmask(SIG_BLOCK, &signalMask, nullptr) < 0) {
         Log::error("Error blocking signals: %s", strerror(errno));
 
         return EXIT_FAILURE;
@@ -48,28 +48,23 @@ int main()
     UsbDeviceManager manager;
 
     // Unblock signals for current thread to allow interruption
-    if (pthread_sigmask(SIG_UNBLOCK, &signalMask, nullptr) < 0)
-    {
+    if (pthread_sigmask(SIG_UNBLOCK, &signalMask, nullptr) < 0) {
         Log::error("Error unblocking signals: %s", strerror(errno));
 
         return EXIT_FAILURE;
     }
 
     // Bind USB device termination to signal reader interruption
-    InterruptibleReader signalReader;
-    UsbDevice::Terminate terminate = std::bind(
-        &InterruptibleReader::interrupt,
-        &signalReader
-    );
-    std::unique_ptr<UsbDevice> device = manager.getDevice({
-        { DONGLE_VID, DONGLE_PID_OLD },
-        { DONGLE_VID, DONGLE_PID_NEW },
-        { DONGLE_VID, DONGLE_PID_SURFACE }
-    }, terminate);
+    InterruptibleReader  signalReader;
+    UsbDevice::Terminate terminate    = std::bind(&InterruptibleReader::interrupt, &signalReader);
+    std::unique_ptr<UsbDevice> device = manager.getDevice({{
+                                                              MICROSOFT_VID,
+                                                              0x2ea,
+                                                          }},
+                                                          terminate);
 
     // Block signals and pass them to the signalfd
-    if (pthread_sigmask(SIG_BLOCK, &signalMask, nullptr) < 0)
-    {
+    if (pthread_sigmask(SIG_BLOCK, &signalMask, nullptr) < 0) {
         Log::error("Error blocking signals: %s", strerror(errno));
 
         return EXIT_FAILURE;
@@ -77,32 +72,21 @@ int main()
 
     int file = signalfd(-1, &signalMask, 0);
 
-    if (file < 0)
-    {
+    if (file < 0) {
         Log::error("Error creating signal file: %s", strerror(errno));
 
         return EXIT_FAILURE;
     }
 
     signalReader.prepare(file);
-
-    Dongle dongle(std::move(device));
+    UsbController    dongle(std::move(device));
     signalfd_siginfo info = {};
 
-    while (signalReader.read(&info, sizeof(info)))
-    {
+    while (signalReader.read(&info, sizeof(info))) {
         uint32_t type = info.ssi_signo;
 
-        if (type == SIGINT || type == SIGTERM)
-        {
+        if (type == SIGINT || type == SIGTERM) {
             break;
-        }
-
-        if (type == SIGUSR1)
-        {
-            Log::debug("User signal received");
-
-            dongle.setPairingStatus(true);
         }
     }
 

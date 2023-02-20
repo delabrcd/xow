@@ -25,8 +25,7 @@
 /*
  * Interruptible reader for file descriptors
  */
-class InterruptibleReader
-{
+class InterruptibleReader {
 public:
     void prepare(int file);
     bool read(void *data, ssize_t size);
@@ -34,8 +33,8 @@ public:
 
 private:
     std::mutex prepareMutex;
-    bool prepared = false;
+    bool       prepared = false;
 
-    int pipes[2];
+    int    pipes[2];
     pollfd polls[2];
 };

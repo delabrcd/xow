@@ -20,20 +20,19 @@
 #include "../utils/log.h"
 #include "../utils/bytes.h"
 
-enum FrameCommand
-{
-    CMD_ACKNOWLEDGE = 0x01,
-    CMD_ANNOUNCE = 0x02,
-    CMD_STATUS = 0x03,
-    CMD_IDENTIFY = 0x04,
-    CMD_POWER_MODE = 0x05,
-    CMD_AUTHENTICATE = 0x06,
-    CMD_GUIDE_BTN = 0x07,
-    CMD_AUDIO_CONFIG = 0x08,
-    CMD_RUMBLE = 0x09,
-    CMD_LED_MODE = 0x0a,
-    CMD_SERIAL_NUM = 0x1e,
-    CMD_INPUT = 0x20,
+enum FrameCommand {
+    CMD_ACKNOWLEDGE   = 0x01,
+    CMD_ANNOUNCE      = 0x02,
+    CMD_STATUS        = 0x03,
+    CMD_IDENTIFY      = 0x04,
+    CMD_POWER_MODE    = 0x05,
+    CMD_AUTHENTICATE  = 0x06,
+    CMD_GUIDE_BTN     = 0x07,
+    CMD_AUDIO_CONFIG  = 0x08,
+    CMD_RUMBLE        = 0x09,
+    CMD_LED_MODE      = 0x0a,
+    CMD_SERIAL_NUM    = 0x1e,
+    CMD_INPUT         = 0x20,
     CMD_AUDIO_SAMPLES = 0x60,
 };
 
@@ -41,15 +40,13 @@ enum FrameCommand
 // Command: controller doesn't respond
 // Request: controller responds with data
 // Request (ACK): controller responds with ack + data
-enum FrameType
-{
+enum FrameType {
     TYPE_COMMAND = 0x00,
-    TYPE_ACK = 0x01,
+    TYPE_ACK     = 0x01,
     TYPE_REQUEST = 0x02,
 };
 
-struct Frame
-{
+struct Frame {
     uint8_t command;
     uint8_t deviceId : 4;
     uint8_t type : 4;
@@ -59,78 +56,54 @@ struct Frame
 
 GipDevice::GipDevice(SendPacket sendPacket) : sendPacket(sendPacket) {}
 
-bool GipDevice::handlePacket(const Bytes &packet)
-{
+bool GipDevice::handlePacket(const Bytes &packet) {
     // Ignore invalid packets
-    if (packet.size() < sizeof(Frame))
-    {
+    if (packet.size() < sizeof(Frame)) {
         return true;
     }
 
     const Frame *frame = packet.toStruct<Frame>();
 
-    if (frame->type & TYPE_ACK && !acknowledgePacket(*frame))
-    {
+    if (frame->type & TYPE_ACK && !acknowledgePacket(*frame)) {
         Log::error("Failed to acknowledge packet");
 
         return false;
     }
 
     // Ignore packets from accessories
-    if (frame->deviceId > 0)
-    {
+    if (frame->deviceId > 0) {
         return true;
     }
 
     const Bytes data(packet, sizeof(Frame));
 
+
     // Data is 32-bit aligned, check for minimum size
-    if (
-        frame->command == CMD_ANNOUNCE &&
-        frame->length == sizeof(AnnounceData) &&
-        data.size() >= sizeof(AnnounceData)
-    ) {
-        deviceAnnounced(
-            frame->deviceId,
-            data.toStruct<AnnounceData>()
-        );
+    if (frame->command == CMD_ANNOUNCE && frame->length == sizeof(AnnounceData) &&
+        data.size() >= sizeof(AnnounceData)) {
+        deviceAnnounced(frame->deviceId, data.toStruct<AnnounceData>());
     }
 
-    else if (
-        frame->command == CMD_STATUS &&
-        frame->length == sizeof(StatusData) &&
-        data.size() >= sizeof(StatusData)
-    ) {
-        statusReceived(
-            frame->deviceId,
-            data.toStruct<StatusData>()
-        );
+    else if (frame->command == CMD_STATUS && frame->length == sizeof(StatusData) &&
+             data.size() >= sizeof(StatusData)) {
+        statusReceived(frame->deviceId, data.toStruct<StatusData>());
     }
 
-    else if (
-        frame->command == CMD_GUIDE_BTN &&
-        frame->length == sizeof(GuideButtonData) &&
-        data.size() >= sizeof(GuideButtonData)
-    ) {
+    else if (frame->command == CMD_GUIDE_BTN && frame->length == sizeof(GuideButtonData) &&
+             data.size() >= sizeof(GuideButtonData)) {
         guideButtonPressed(data.toStruct<GuideButtonData>());
     }
 
-    else if (
-        frame->command == CMD_SERIAL_NUM &&
-        frame->length == sizeof(SerialData) &&
-        data.size() >= sizeof(SerialData)
-    ) {
+    else if (frame->command == CMD_SERIAL_NUM && frame->length == sizeof(SerialData) &&
+             data.size() >= sizeof(SerialData)) {
         serialNumberReceived(data.toStruct<SerialData>());
     }
 
     // Elite controllers send a larger input packet
     // The button remapping is done in hardware
     // The "non-remapped" input is appended to the packet
-    else if (
-        frame->command == CMD_INPUT &&
-        frame->length >= sizeof(InputData) &&
-        data.size() >= sizeof(InputData)
-    ) {
+    else if (frame->command == CMD_INPUT && frame->length >= sizeof(InputData) &&
+             data.size() >= sizeof(InputData)) {
         inputReceived(data.toStruct<InputData>());
     }
 
@@ -138,15 +111,14 @@ bool GipDevice::handlePacket(const Bytes &packet)
     return true;
 }
 
-bool GipDevice::setPowerMode(uint8_t id, PowerMode mode)
-{
+bool GipDevice::setPowerMode(uint8_t id, PowerMode mode) {
     Frame frame = {};
 
-    frame.command = CMD_POWER_MODE;
+    frame.command  = CMD_POWER_MODE;
     frame.deviceId = id;
-    frame.type = TYPE_REQUEST;
+    frame.type     = TYPE_REQUEST;
     frame.sequence = getSequence();
-    frame.length = sizeof(uint8_t);
+    frame.length   = sizeof(uint8_t);
 
     Bytes out;
 
@@ -156,14 +128,47 @@ bool GipDevice::setPowerMode(uint8_t id, PowerMode mode)
     return sendPacket(out);
 }
 
-bool GipDevice::performRumble(RumbleData rumble)
-{
+bool GipDevice::identify(uint8_t id) {
     Frame frame = {};
 
-    frame.command = CMD_RUMBLE;
-    frame.type = TYPE_COMMAND;
+    frame.command  = CMD_IDENTIFY;
+    frame.deviceId = id;
+    frame.type     = TYPE_REQUEST;
     frame.sequence = getSequence();
-    frame.length = sizeof(rumble);
+    frame.length   = 0;
+
+    Bytes out;
+
+    out.append(frame);
+    // out.append(static_cast<uint8_t>(0x07));
+
+    return sendPacket(out);
+}
+
+bool GipDevice::xboxOneSReset(uint8_t id) {
+    Frame frame = {};
+
+    frame.command  = CMD_POWER_MODE;
+    frame.deviceId = id;
+    frame.type     = TYPE_REQUEST;
+    frame.sequence = getSequence();
+    frame.length   = sizeof(uint8_t);
+
+    Bytes out;
+
+    out.append(frame);
+    out.append(static_cast<uint8_t>(0x07));
+
+    return sendPacket(out);
+}
+
+bool GipDevice::performRumble(RumbleData rumble) {
+    Frame frame = {};
+
+    frame.command  = CMD_RUMBLE;
+    frame.type     = TYPE_COMMAND;
+    frame.sequence = getSequence();
+    frame.length   = sizeof(rumble);
 
     Bytes out;
 
@@ -173,14 +178,13 @@ bool GipDevice::performRumble(RumbleData rumble)
     return sendPacket(out);
 }
 
-bool GipDevice::setLedMode(LedModeData mode)
-{
+bool GipDevice::setLedMode(LedModeData mode) {
     Frame frame = {};
 
-    frame.command = CMD_LED_MODE;
-    frame.type = TYPE_REQUEST;
+    frame.command  = CMD_LED_MODE;
+    frame.type     = TYPE_REQUEST;
     frame.sequence = getSequence();
-    frame.length = sizeof(mode);
+    frame.length   = sizeof(mode);
 
     Bytes out;
 
@@ -190,14 +194,13 @@ bool GipDevice::setLedMode(LedModeData mode)
     return sendPacket(out);
 }
 
-bool GipDevice::requestSerialNumber()
-{
+bool GipDevice::requestSerialNumber() {
     Frame frame = {};
 
-    frame.command = CMD_SERIAL_NUM;
-    frame.type = TYPE_REQUEST | TYPE_ACK;
+    frame.command  = CMD_SERIAL_NUM;
+    frame.type     = TYPE_REQUEST | TYPE_ACK;
     frame.sequence = getSequence();
-    frame.length = sizeof(uint8_t);
+    frame.length   = sizeof(uint8_t);
 
     Bytes out;
 
@@ -208,19 +211,18 @@ bool GipDevice::requestSerialNumber()
     return sendPacket(out);
 }
 
-bool GipDevice::acknowledgePacket(Frame frame)
-{
+bool GipDevice::acknowledgePacket(Frame frame) {
     Frame header = {};
 
-    header.command = CMD_ACKNOWLEDGE;
+    header.command  = CMD_ACKNOWLEDGE;
     header.deviceId = frame.deviceId;
-    header.type = TYPE_REQUEST;
+    header.type     = TYPE_REQUEST;
     header.sequence = frame.sequence;
-    header.length = sizeof(header) + 5;
+    header.length   = sizeof(header) + 5;
 
-    frame.type = TYPE_REQUEST;
+    frame.type     = TYPE_REQUEST;
     frame.sequence = frame.length;
-    frame.length = 0;
+    frame.length   = 0;
 
     Bytes out;
 
@@ -232,21 +234,17 @@ bool GipDevice::acknowledgePacket(Frame frame)
     return sendPacket(out);
 }
 
-uint8_t GipDevice::getSequence(bool accessory)
-{
-    if (accessory)
-    {
+uint8_t GipDevice::getSequence(bool accessory) {
+    if (accessory) {
         // Zero is an invalid sequence number
-        if (accessorySequence == 0x00)
-        {
+        if (accessorySequence == 0x00) {
             accessorySequence = 0x01;
         }
 
         return accessorySequence++;
     }
 
-    if (sequence == 0x00)
-    {
+    if (sequence == 0x00) {
         sequence = 0x01;
     }
 

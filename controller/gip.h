@@ -39,57 +39,50 @@ class Bytes;
  *   -> Serial number: 0x04 (from dongle)
  *   <- Serial number       (from controller)
  */
-class GipDevice
-{
+class GipDevice {
 public:
-    using SendPacket = std::function<bool(const Bytes &data)>;
+    using SendPacket = std::function<bool(Bytes &data)>;
 
     bool handlePacket(const Bytes &packet);
 
 protected:
-    enum BatteryType
-    {
+    enum BatteryType {
         BATT_TYPE_CHARGING = 0x00,
         BATT_TYPE_ALKALINE = 0x01,
-        BATT_TYPE_NIMH = 0x02,
+        BATT_TYPE_NIMH     = 0x02,
     };
 
-    enum BatteryLevel
-    {
+    enum BatteryLevel {
         BATT_LEVEL_EMPTY = 0x00,
-        BATT_LEVEL_LOW = 0x01,
-        BATT_LEVEL_MED = 0x02,
-        BATT_LEVEL_FULL = 0x03,
+        BATT_LEVEL_LOW   = 0x01,
+        BATT_LEVEL_MED   = 0x02,
+        BATT_LEVEL_FULL  = 0x03,
     };
 
     // Controller input can be paused temporarily
-    enum PowerMode
-    {
-        POWER_ON = 0x00,
+    enum PowerMode {
+        POWER_ON    = 0x00,
         POWER_SLEEP = 0x01,
-        POWER_OFF = 0x04,
+        POWER_OFF   = 0x04,
     };
 
-    enum LedMode
-    {
-        LED_OFF = 0x00,
-        LED_ON = 0x01,
+    enum LedMode {
+        LED_OFF        = 0x00,
+        LED_ON         = 0x01,
         LED_BLINK_FAST = 0x02,
-        LED_BLINK_MED = 0x03,
+        LED_BLINK_MED  = 0x03,
         LED_BLINK_SLOW = 0x04,
-        LED_FADE_SLOW = 0x08,
-        LED_FADE_FAST = 0x09,
+        LED_FADE_SLOW  = 0x08,
+        LED_FADE_FAST  = 0x09,
     };
 
-    struct AnnounceData
-    {
-        uint8_t macAddress[6];
+    struct AnnounceData {
+        uint8_t  macAddress[6];
         uint16_t unknown;
         uint16_t vendorId;
         uint16_t productId;
 
-        struct
-        {
+        struct {
             uint16_t major;
             uint16_t minor;
             uint16_t build;
@@ -97,23 +90,20 @@ protected:
         } __attribute__((packed)) firmwareVersion, hardwareVersion;
     } __attribute__((packed));
 
-    struct StatusData
-    {
+    struct StatusData {
         uint32_t batteryLevel : 2;
         uint32_t batteryType : 2;
         uint32_t connectionInfo : 4;
-        uint8_t unknown1;
+        uint8_t  unknown1;
         uint16_t unknown2;
     } __attribute__((packed));
 
-    struct GuideButtonData
-    {
+    struct GuideButtonData {
         uint8_t pressed;
         uint8_t unknown;
     } __attribute__((packed));
 
-    struct RumbleData
-    {
+    struct RumbleData {
         uint8_t unknown;
         uint8_t setRight : 1;
         uint8_t setLeft : 1;
@@ -129,23 +119,19 @@ protected:
         uint8_t repeat;
     } __attribute__((packed));
 
-    struct LedModeData
-    {
+    struct LedModeData {
         uint8_t unknown;
         uint8_t mode;
         uint8_t brightness;
     } __attribute__((packed));
 
-    struct SerialData
-    {
+    struct SerialData {
         uint16_t unknown;
-        char serialNumber[14];
+        char     serialNumber[14];
     } __attribute__((packed));
 
-    struct InputData
-    {
-        struct
-        {
+    struct InputData {
+        struct Buttons {
             uint32_t unknown : 2;
             uint32_t start : 1;
             uint32_t select : 1;
@@ -161,35 +147,63 @@ protected:
             uint32_t bumperRight : 1;
             uint32_t stickLeft : 1;
             uint32_t stickRight : 1;
+            Buttons() {
+                unknown     = 0;
+                start       = 0;
+                select      = 0;
+                a           = 0;
+                b           = 0;
+                x           = 0;
+                y           = 0;
+                dpadUp      = 0;
+                dpadDown    = 0;
+                dpadLeft    = 0;
+                dpadRight   = 0;
+                bumperLeft  = 0;
+                bumperRight = 0;
+                stickLeft   = 0;
+                stickRight  = 0;
+            }
         } __attribute__((packed)) buttons;
 
         uint16_t triggerLeft;
         uint16_t triggerRight;
-        int16_t stickLeftX;
-        int16_t stickLeftY;
-        int16_t stickRightX;
-        int16_t stickRightY;
+        int16_t  stickLeftX;
+        int16_t  stickLeftY;
+        int16_t  stickRightX;
+        int16_t  stickRightY;
+        InputData() {
+            triggerLeft  = 0;
+            triggerRight = 0;
+            stickLeftX   = 0;
+            stickLeftY   = 0;
+            stickRightX  = 0;
+            stickRightY  = 0;
+        }
     } __attribute__((packed));
 
     GipDevice(SendPacket sendPacket);
     virtual ~GipDevice() = default;
 
     virtual void deviceAnnounced(uint8_t id, const AnnounceData *announce) = 0;
-    virtual void statusReceived(uint8_t id, const StatusData *status) = 0;
-    virtual void guideButtonPressed(const GuideButtonData *button) = 0;
-    virtual void serialNumberReceived(const SerialData *serial) = 0;
-    virtual void inputReceived(const InputData *input) = 0;
+    virtual void statusReceived(uint8_t id, const StatusData *status)      = 0;
+    virtual void guideButtonPressed(const GuideButtonData *button)         = 0;
+    virtual void serialNumberReceived(const SerialData *serial)            = 0;
+    virtual void inputReceived(const InputData *input)                     = 0;
 
     bool setPowerMode(uint8_t id, PowerMode mode);
     bool performRumble(RumbleData rumble);
     bool setLedMode(LedModeData mode);
     bool requestSerialNumber();
+    bool xboxOneSReset(uint8_t id);
+    bool identify(uint8_t id);
+
+    SendPacket sendPacket;
 
 private:
-    bool acknowledgePacket(Frame frame);
+    bool    acknowledgePacket(Frame frame);
     uint8_t getSequence(bool accessory = false);
 
-    uint8_t sequence = 0x01;
+    uint8_t sequence          = 0x01;
     uint8_t accessorySequence = 0x01;
-    SendPacket sendPacket;
 };

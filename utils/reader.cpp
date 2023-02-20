@@ -22,62 +22,53 @@
 #include <cstring>
 #include <unistd.h>
 
-void InterruptibleReader::prepare(int file)
-{
+void InterruptibleReader::prepare(int file) {
     std::lock_guard<std::mutex> lock(prepareMutex);
 
-    if (pipe(pipes))
-    {
+    if (pipe(pipes)) {
         Log::error("Error creating pipes: %s", strerror(errno));
 
         return;
     }
 
-    polls[0].fd = pipes[0];
-    polls[1].fd = file;
+    polls[0].fd     = pipes[0];
+    polls[1].fd     = file;
     polls[0].events = POLLIN;
     polls[1].events = POLLIN;
 
     prepared = true;
 }
 
-void InterruptibleReader::interrupt()
-{
+void InterruptibleReader::interrupt() {
     std::lock_guard<std::mutex> lock(prepareMutex);
 
-    if (!prepared)
-    {
+    if (!prepared) {
         return;
     }
 
-    bool stop = true;
+    bool    stop = true;
     ssize_t size = sizeof(stop);
 
-    if (write(pipes[1], &stop, size) != size)
-    {
+    if (write(pipes[1], &stop, size) != size) {
         Log::error("Error writing stop signal: %s", strerror(errno));
     }
 
     prepared = false;
 }
 
-bool InterruptibleReader::read(void *data, ssize_t size)
-{
+bool InterruptibleReader::read(void *data, ssize_t size) {
     // Wait for an event or a stop signal
     int error = poll(polls, 2, -1);
 
-    if (error < 0)
-    {
+    if (error < 0) {
         Log::error("Poll failed: %s", strerror(errno));
 
         return false;
     }
 
     // Event loop was interrupted
-    if (polls[0].revents & POLLIN)
-    {
-        if (close(pipes[0]) < 0 || close(pipes[1]) < 0)
-        {
+    if (polls[0].revents & POLLIN) {
+        if (close(pipes[0]) < 0 || close(pipes[1]) < 0) {
             Log::error("Error closing pipes: %s", strerror(errno));
         }
 
@@ -85,8 +76,7 @@ bool InterruptibleReader::read(void *data, ssize_t size)
     }
 
     // Data is available
-    if (polls[1].revents & POLLIN)
-    {
+    if (polls[1].revents & POLLIN) {
         return ::read(polls[1].fd, data, size) == size;
     }
 

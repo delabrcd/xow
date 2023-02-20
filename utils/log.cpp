@@ -22,44 +22,39 @@
 #include <sstream>
 #include <iomanip>
 
-namespace Log
-{
-    std::string formatBytes(const Bytes &bytes)
-    {
-        std::ostringstream stream;
+namespace Log {
+std::string formatBytes(const Bytes &bytes) {
+    std::ostringstream stream;
 
-        stream << std::hex << std::setfill('0');
+    stream << std::hex << std::setfill('0');
 
-        for (uint8_t byte : bytes)
-        {
-            stream << std::setw(2);
-            stream << static_cast<uint32_t>(byte) << ':';
-        }
-
-        std::string output = stream.str();
-
-        // Remove trailing colon
-        output.pop_back();
-
-        return output;
+    for (uint8_t byte : bytes) {
+        stream << std::setw(2);
+        stream << static_cast<uint32_t>(byte) << ':';
     }
 
-    std::string formatLog(std::string level, std::string message)
-    {
-        std::ostringstream stream;
-        std::time_t time = std::time(nullptr);
-        std::tm localTime = {};
+    std::string output = stream.str();
 
-        // Add local time to output if available
-        if (localtime_r(&time, &localTime))
-        {
-            stream << std::put_time(&localTime, "%F %T") << " ";
-        }
+    // Remove trailing colon
+    output.pop_back();
 
-        stream << std::left << std::setw(5);
-        stream << level << " - ";
-        stream << message << std::endl;
-
-        return stream.str();
-    }
+    return output;
 }
+
+std::string formatLog(std::string level, std::string message) {
+    std::ostringstream stream;
+    std::time_t        time      = std::time(nullptr);
+    std::tm            localTime = {};
+
+    // Add local time to output if available
+    if (localtime_r(&time, &localTime)) {
+        stream << std::put_time(&localTime, "%F %T") << " ";
+    }
+
+    stream << std::left << std::setw(5);
+    stream << level << " - ";
+    stream << message << std::endl;
+
+    return stream.str();
+}
+}  // namespace Log
