@@ -10,3 +10,5 @@ CMakeFiles/**
 *.cmake
 *.marks
 Makefile
+CMakeCache.txt
+*.a
