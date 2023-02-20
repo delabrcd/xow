@@ -76,33 +76,41 @@ void Controller::inputReceived(const InputData *input) {
     Log::info("a: %d", m_InputData.buttons.a);
 }
 
+void Controller::sendXBInitialPacket() {
+    uint8_t data[] = {0x08, 0x00, 0x0F, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    Bytes   packet;
+    packet.append(data);
+    sendPacket(packet);
+}
+
 void Controller::initInput(const AnnounceData *announce) {
     LedModeData ledMode = {};
+    sendXBInitialPacket();
+    return;
     // Dim the LED a little bit, like the original driver
     // Brightness ranges from 0x00 to 0x20
-    ledMode.mode       = LED_ON;
-    ledMode.brightness = 0x14;
+    // ledMode.mode       = LED_ON;
+    // ledMode.brightness = 0x14;
 
-    if (!xboxOneSReset(DEVICE_ID_CONTROLLER)) {
-        Log::error("Failed to reset device");
-        return;
-    }
+    // if (!xboxOneSReset(DEVICE_ID_CONTROLLER)) {
+    //     Log::error("Failed to reset device");
+    //     return;
+    // }
 
-    if (!setPowerMode(DEVICE_ID_CONTROLLER, POWER_ON)) {
-        Log::error("Failed to set initial power mode");
+    // if (!setPowerMode(DEVICE_ID_CONTROLLER, POWER_ON)) {
+    //     Log::error("Failed to set initial power mode");
+    //     return;
+    // }
 
-        return;
-    }
+    // if (!setLedMode(ledMode)) {
+    //     Log::error("Failed to set initial LED mode");
 
-    if (!setLedMode(ledMode)) {
-        Log::error("Failed to set initial LED mode");
+    //     return;
+    // }
 
-        return;
-    }
+    // if (!requestSerialNumber()) {
+    //     Log::error("Failed to request serial number");
 
-    if (!requestSerialNumber()) {
-        Log::error("Failed to request serial number");
-
-        return;
-    }
+    //     return;
+    // }
 }

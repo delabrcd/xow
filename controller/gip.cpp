@@ -74,7 +74,7 @@ bool GipDevice::handlePacket(const Bytes &packet) {
     if (frame->deviceId > 0) {
         return true;
     }
-
+#if 0
     const Bytes data(packet, sizeof(Frame));
 
 
@@ -106,7 +106,7 @@ bool GipDevice::handlePacket(const Bytes &packet) {
              data.size() >= sizeof(InputData)) {
         inputReceived(data.toStruct<InputData>());
     }
-
+#endif
     // Ignore any unknown packets
     return true;
 }

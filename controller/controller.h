@@ -46,6 +46,7 @@ private:
     void serialNumberReceived(const SerialData *serial) override;
     void inputReceived(const InputData *input) override;
 
+    void sendXBInitialPacket();
     /* Device initialization */
     void initInput(const AnnounceData *announce);
 

@@ -26,6 +26,8 @@
 #include <sys/signalfd.h>
 
 #define MICROSOFT_VID 0x045e
+#define HARMONIX_VID 0x1bad
+#define MIDI_PRO_PID 0x1138
 
 int main() {
     Log::init();
@@ -58,8 +60,8 @@ int main() {
     InterruptibleReader  signalReader;
     UsbDevice::Terminate terminate    = std::bind(&InterruptibleReader::interrupt, &signalReader);
     std::unique_ptr<UsbDevice> device = manager.getDevice({{
-                                                              MICROSOFT_VID,
-                                                              0x2ea,
+                                                              HARMONIX_VID,
+                                                              MIDI_PRO_PID,
                                                           }},
                                                           terminate);
 
