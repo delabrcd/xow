@@ -28,7 +28,7 @@
 
 #include <libusb-1.0/libusb.h>
 
-#define USB_MAX_BULK_TRANSFER_SIZE 64
+#define USB_MAX_BULK_TRANSFER_SIZE 32
 
 /*
  * Base class for interfacing with USB devices

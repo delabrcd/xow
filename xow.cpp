@@ -32,7 +32,7 @@
 int main() {
     Log::init();
     Log::info("xow %s ©Severin v. W.", VERSION);
-
+    Log::debug("DEBUGGING ENABLED");
     sigset_t signalMask;
 
     sigemptyset(&signalMask);

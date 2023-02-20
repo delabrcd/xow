@@ -77,10 +77,11 @@ void Controller::inputReceived(const InputData *input) {
 }
 
 void Controller::sendXBInitialPacket() {
-    uint8_t data[] = {0x08, 0x00, 0x0F, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    Bytes   packet;
-    packet.append(data);
-    sendPacket(packet);
+    // uint8_t data[] = {0x08, 0x00, 0x0F, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    // Bytes   packet;
+    // packet.append(data);
+    // sendPacket(packet);
+    
 }
 
 void Controller::initInput(const AnnounceData *announce) {

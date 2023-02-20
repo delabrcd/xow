@@ -16,4 +16,4 @@ find_package(Threads REQUIRED)
 
 target_link_libraries(xow usb-1.0 Threads::Threads util controller)
 
-add_definitions(-DVERSION="HI")
+add_definitions(-DVERSION="HI" -DDEBUG)

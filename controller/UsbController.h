@@ -15,6 +15,7 @@ public:
     void readBulkPackets(uint8_t endpoint);
 
     void handleBulkData(const Bytes &data);
+    void controlWrite(UsbDevice::ControlPacket packet, bool write);
 
 private:
     std::vector<std::thread>    m_Threads;
