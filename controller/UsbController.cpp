@@ -20,7 +20,6 @@ UsbController::UsbController(std::unique_ptr<UsbDevice> usbDevice)
     pkt.length  = 0;
     controlWrite(pkt, true);
 
-    UsbDevice::ControlPacket pkt;
     pkt.type    = 0x40;
     pkt.request = 0xa9;
     pkt.value   = 0x2344;
@@ -28,7 +27,6 @@ UsbController::UsbController(std::unique_ptr<UsbDevice> usbDevice)
     pkt.length  = 0;
     controlWrite(pkt, true);
 
-    UsbDevice::ControlPacket pkt;
     pkt.type    = 0x40;
     pkt.request = 0xa9;
     pkt.value   = 0x5839;
@@ -38,7 +36,6 @@ UsbController::UsbController(std::unique_ptr<UsbDevice> usbDevice)
 
     uint8_t code[2] = {0x01, 0x02};
 
-    UsbDevice::ControlPacket pkt;
     pkt.type    = 0xc0;
     pkt.request = 0xa1;
     pkt.value   = 0x0000;
@@ -47,7 +44,6 @@ UsbController::UsbController(std::unique_ptr<UsbDevice> usbDevice)
     pkt.data    = code;
     controlWrite(pkt, true);
 
-    UsbDevice::ControlPacket pkt;
     pkt.type    = 0x40;
     pkt.request = 0xa1;
     pkt.value   = 0x0000;
@@ -56,7 +52,6 @@ UsbController::UsbController(std::unique_ptr<UsbDevice> usbDevice)
     pkt.data    = code;
     controlWrite(pkt, true);
 
-    UsbDevice::ControlPacket pkt;
     pkt.type    = 0xc0;
     pkt.request = 0xa1;
     pkt.value   = 0x0000;
