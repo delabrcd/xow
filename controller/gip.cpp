@@ -61,6 +61,7 @@ bool GipDevice::handlePacket(const Bytes &packet) {
     if (packet.size() < sizeof(Frame)) {
         return true;
     }
+#if 0
 
     const Frame *frame = packet.toStruct<Frame>();
 
@@ -74,7 +75,6 @@ bool GipDevice::handlePacket(const Bytes &packet) {
     if (frame->deviceId > 0) {
         return true;
     }
-#if 0
     const Bytes data(packet, sizeof(Frame));
 
 
