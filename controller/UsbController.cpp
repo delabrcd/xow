@@ -13,53 +13,15 @@ UsbController::UsbController(std::unique_ptr<UsbDevice> usbDevice)
         std::bind(&UsbController::sendClientPacket, this, std::placeholders::_1);
     m_Controller = std::make_unique<Controller>(sendPacket);
     UsbDevice::ControlPacket pkt;
-    pkt.type    = 0x40;
-    pkt.request = 0xa9;
-    pkt.value   = 0xa30c;
-    pkt.index   = 0x4423;
-    pkt.length  = 0;
+    uint8_t                  data[] = {0x01, 0x03, (0x02 + 4)};
+
+    pkt.type    = LIBUSB_REQUEST_TYPE_CLASS | LIBUSB_RECIPIENT_INTERFACE;
+    pkt.data    = data;
+    pkt.request = HID_REQUEST_SET_REPORT;
+    pkt.value   = 0x02;
+    pkt.index   = 0x00;
+    pkt.length  = sizeof(data);
     controlWrite(pkt, true);
-
-    pkt.type    = 0x40;
-    pkt.request = 0xa9;
-    pkt.value   = 0x2344;
-    pkt.index   = 0x7f03;
-    pkt.length  = 0;
-    controlWrite(pkt, true);
-
-    pkt.type    = 0x40;
-    pkt.request = 0xa9;
-    pkt.value   = 0x5839;
-    pkt.index   = 0x6832;
-    pkt.length  = 0;
-    controlWrite(pkt, true);
-
-    uint8_t code[2] = {0x01, 0x02};
-
-    pkt.type    = 0xc0;
-    pkt.request = 0xa1;
-    pkt.value   = 0x0000;
-    pkt.index   = 0xe416;
-    pkt.length  = 2;
-    pkt.data    = code;
-    controlWrite(pkt, true);
-
-    pkt.type    = 0x40;
-    pkt.request = 0xa1;
-    pkt.value   = 0x0000;
-    pkt.index   = 0xe416;
-    pkt.length  = 2;
-    pkt.data    = code;
-    controlWrite(pkt, true);
-
-    pkt.type    = 0xc0;
-    pkt.request = 0xa1;
-    pkt.value   = 0x0000;
-    pkt.index   = 0xe416;
-    pkt.length  = 2;
-    pkt.data    = code;
-    controlWrite(pkt, true);
-
     m_Threads.emplace_back(&UsbController::readBulkPackets, this,
                            m_UsbDevice->getEndpointInAddress());
 }
