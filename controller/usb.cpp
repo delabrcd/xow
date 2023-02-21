@@ -88,9 +88,9 @@ void UsbDevice::controlTransfer(ControlPacket packet, bool write) {
     uint8_t direction = write ? LIBUSB_ENDPOINT_OUT : LIBUSB_ENDPOINT_IN;
 
     // Number of bytes or error code
-    int transferred =
-        libusb_control_transfer(handle, (0x20 | 0x01), packet.request, packet.value, packet.index,
-                                packet.data, packet.length, USB_TIMEOUT_WRITE);
+    int transferred = libusb_control_transfer(
+        handle, packet.type, packet.request,
+        packet.value, packet.index, packet.data, packet.length, USB_TIMEOUT_WRITE);
 
     if (transferred != packet.length) {
         Log::error("Error in control transfer: %s", libusb_error_name(transferred));
@@ -102,7 +102,7 @@ void UsbDevice::controlTransfer(ControlPacket packet, bool write) {
 int UsbDevice::bulkRead(uint8_t endpoint, FixedBytes<USB_MAX_BULK_TRANSFER_SIZE> &buffer) {
     int transferred = 0;
     int error       = libusb_bulk_transfer(handle, endpoint | LIBUSB_ENDPOINT_IN, buffer.raw(),
-                                           buffer.size(), &transferred, USB_TIMEOUT_READ);
+                                     buffer.size(), &transferred, USB_TIMEOUT_READ);
 
     if (error && error != LIBUSB_ERROR_TIMEOUT) {
         Log::error("Error in bulk read: %s", libusb_error_name(error));
@@ -118,7 +118,7 @@ int UsbDevice::bulkRead(uint8_t endpoint, FixedBytes<USB_MAX_BULK_TRANSFER_SIZE>
 bool UsbDevice::bulkWrite(uint8_t endpoint, Bytes &data) {
     int transferred = 0;
     int error       = libusb_bulk_transfer(handle, m_EPOUT.bEndpointAddress | LIBUSB_ENDPOINT_OUT,
-                                           data.raw(), data.size(), &transferred, USB_TIMEOUT_WRITE);
+                                     data.raw(), data.size(), &transferred, USB_TIMEOUT_WRITE);
 
     if (error) {
         Log::error("Error in bulk write: %s", libusb_error_name(error));
@@ -147,7 +147,7 @@ std::unique_ptr<UsbDevice> UsbDeviceManager::getDevice(std::initializer_list<Har
                                                        UsbDevice::Terminate terminate) {
     std::vector<libusb_hotplug_callback_handle> handles(ids.size());
     size_t                                      counter = 0;
-    libusb_device                              *device  = nullptr;
+    libusb_device *                             device  = nullptr;
 
     for (HardwareId id : ids) {
         int error = libusb_hotplug_register_callback(

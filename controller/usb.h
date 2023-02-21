@@ -39,6 +39,7 @@ public:
     using Terminate = std::function<void()>;
 
     struct ControlPacket {
+        uint8_t  type;
         uint8_t  request;
         uint16_t value;
         uint16_t index;
@@ -64,7 +65,7 @@ public:
 private:
     libusb_endpoint_descriptor m_EPIN;
     libusb_endpoint_descriptor m_EPOUT;
-    libusb_device_handle *     handle;
+    libusb_device_handle      *handle;
     Terminate                  terminate;
 };
 
