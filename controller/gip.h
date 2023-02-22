@@ -20,7 +20,7 @@
 
 #include <cstdint>
 #include <functional>
-
+#include <iostream>
 struct Frame;
 class Bytes;
 
@@ -39,6 +39,90 @@ class Bytes;
  *   -> Serial number: 0x04 (from dongle)
  *   <- Serial number       (from controller)
  */
+struct Header {
+    uint8_t type : 8;
+    uint8_t length : 8;
+} __attribute__((packed));
+
+struct MidiProDrumInputData : public Header {
+    uint8_t dpad_up_cym_yellow : 1;
+    uint8_t dpad_down_cym_blue : 1;
+    uint8_t dpad_left : 1;
+    uint8_t dpad_right : 1;
+
+    uint8_t start : 1;
+    uint8_t select : 1;
+    uint8_t hihat : 1;
+    uint8_t pad_select : 1;
+
+    uint8_t lb_kick : 1;
+    uint8_t cym_select : 1;
+    uint8_t guide : 1;
+    uint8_t : 1;
+
+    uint8_t a_green : 1;
+    uint8_t b_red : 1;
+    uint8_t x_blue : 1;
+    uint8_t y_yellow : 1;
+
+    uint8_t unknown[15];
+
+    inline void print() const {
+        std::cout << "I THINK THIS PACKET SAYS:" << std::endl;
+        if (cym_select) {
+            if (y_yellow && dpad_up_cym_yellow)
+                std::cout << "\t YELLOW CYMBAL" << std::endl;
+            if (x_blue && dpad_down_cym_blue)
+                std::cout << "\t BLUE CYMBAL" << std::endl;
+            if (a_green)
+                std::cout << "\t GREEN CYMBAL" << std::endl;
+        }
+        if (pad_select) {
+            if (a_green)
+                std::cout << "\t GREEN PAD" << std::endl;
+            if (b_red)
+                std::cout << "\t RED PAD" << std::endl;
+            if (x_blue)
+                std::cout << "\t BLUE PAD" << std::endl;
+            if (y_yellow)
+                std::cout << "\t YELLOW PAD" << std::endl;
+        }
+        if (!cym_select && !pad_select) {
+            if (dpad_down_cym_blue)
+                std::cout << "\t DPAD DOWN" << std::endl;
+            if (dpad_left)
+                std::cout << "\t DPAD LEFT" << std::endl;
+            if (dpad_up_cym_yellow)
+                std::cout << "\t DPAD UP" << std::endl;
+            if (dpad_right)
+                std::cout << "\t DPAD RIGHT" << std::endl;
+            if (a_green)
+                std::cout << "\t A" << std::endl;
+            if (b_red)
+                std::cout << "\t B" << std::endl;
+            if (x_blue)
+                std::cout << "\t X" << std::endl;
+            if (y_yellow)
+                std::cout << "\t Y" << std::endl;
+        }
+
+        if (start)
+            std::cout << "\t START" << std::endl;
+
+        if (select)
+            std::cout << "\t SELECT" << std::endl;
+
+        if (guide)
+            std::cout << "\t GUIDE" << std::endl;
+
+        if (lb_kick)
+            std::cout << "\t KICK" << std::endl;
+
+        if (hihat)
+            std::cout << "\t HH/Double Bass" << std::endl;
+    }
+} __attribute__((packed));
+
 class GipDevice {
 public:
     using SendPacket = std::function<bool(Bytes &data)>;

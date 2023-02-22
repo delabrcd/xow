@@ -58,9 +58,12 @@ GipDevice::GipDevice(SendPacket sendPacket) : sendPacket(sendPacket) {}
 
 bool GipDevice::handlePacket(const Bytes &packet) {
     // Ignore invalid packets
-    if (packet.size() < sizeof(Frame)) {
+    if (packet.size() < sizeof(InputData)) {
         return true;
     }
+    auto new_packet = packet.toStruct<MidiProDrumInputData>();
+    new_packet->print();
+
 #if 0
 
     const Frame *frame = packet.toStruct<Frame>();
