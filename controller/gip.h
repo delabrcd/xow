@@ -65,7 +65,7 @@ struct MidiProDrumInputData : public Header {
     uint8_t x_blue : 1;
     uint8_t y_yellow : 1;
 
-    uint8_t unknown[15];
+    uint8_t unknown[16];
 
     inline void print() const {
         std::cout << "I THINK THIS PACKET SAYS:" << std::endl;
