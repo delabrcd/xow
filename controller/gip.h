@@ -80,6 +80,9 @@ struct MidiProDrumInputData : public Header {
         if (y_yellow) {
             if (cym_select && !pad_select) {
                 std::cout << "\t YELLOW CYMBAL" << std::endl;
+            } else if (cym_select && pad_select && !(x_blue || a_green || b_red)) {
+                std::cout << "\t YELLOW CYMBAL" << std::endl;
+                std::cout << "\t YELLOW PAD" << std::endl;
             } else if (cym_select && dpad_up_cym_yellow) {
                 std::cout << "\t YELLOW CYMBAL" << std::endl;
             } else if (pad_select) {
@@ -92,6 +95,9 @@ struct MidiProDrumInputData : public Header {
         if (x_blue) {
             if (cym_select && !pad_select) {
                 std::cout << "\t BLUE CYMBAL" << std::endl;
+            } else if (cym_select && pad_select && !(y_yellow || a_green || b_red)) {
+                std::cout << "\t BLUE CYMBAL" << std::endl;
+                std::cout << "\t BLUE PAD" << std::endl;
             } else if (cym_select && dpad_down_cym_blue) {
                 std::cout << "\t BLUE CYMBAL" << std::endl;
             } else if (pad_select) {
