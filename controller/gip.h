@@ -68,7 +68,52 @@ struct MidiProDrumInputData : public Header {
     uint8_t unknown[16];
 
     inline void print() const {
+        bool pad1 = false;
+        bool pad2 = false;
+        bool pad3 = false;
         std::cout << "I THINK THIS PACKET SAYS:" << std::endl;
+        if (b_red && pad_select) {
+            std::cout << "\t RED PAD" << std::endl;
+            pad1 = true;
+        }
+
+        if (y_yellow) {
+            if (cym_select && !pad_select) {
+                std::cout << "\t YELLOW CYMBAL" << std::endl;
+            } else if (cym_select && dpad_up_cym_yellow) {
+                std::cout << "\t YELLOW CYMBAL" << std::endl;
+            } else if (pad_select) {
+                std::cout << "\t YELLOW PAD" << std::endl;
+                pad1 = true;
+            } else {
+                std::cout << "\t Y" << std::endl;
+            }
+        }
+        if (x_blue) {
+            if (cym_select && !pad_select) {
+                std::cout << "\t BLUE CYMBAL" << std::endl;
+            } else if (cym_select && dpad_down_cym_blue) {
+                std::cout << "\t BLUE CYMBAL" << std::endl;
+            } else if (pad_select) {
+                std::cout << "\t BLUE PAD" << std::endl;
+                pad2 = true;
+            } else {
+                std::cout << "\t X" << std::endl;
+            }
+        }
+
+        if (a_green) {
+            if (cym_select && !pad_select)
+                std::cout << "\t GREEN CYMBAL" << std::endl;
+            else if (cym_select && pad_select && (pad1 || pad2 || pad3))
+                std::cout << "\t GREEN CYMBAL" << std::endl;
+            else if (pad_select) {
+                std::cout << "\t GREEN PAD" << std::endl;
+            } else {
+                std::cout << "\t A" << std::endl;
+            }
+        }
+#if 0
         if (cym_select) {
             if (y_yellow && dpad_up_cym_yellow)
                 std::cout << "\t YELLOW CYMBAL" << std::endl;
@@ -105,7 +150,7 @@ struct MidiProDrumInputData : public Header {
             if (y_yellow)
                 std::cout << "\t Y" << std::endl;
         }
-
+#endif
         if (start)
             std::cout << "\t START" << std::endl;
 
